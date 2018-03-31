@@ -1,0 +1,237 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+    <link rel="stylesheet" href="./src/css/bootstrap_3.3.7.css" />
+    <link rel="stylesheet" href="./src/css/bootstrapTheme_3.3.7.css" />
+    <link rel="stylesheet" href="./src/css/styles.css" />
+    <link rel="stylesheet" href="./src/css/selectize.css" />
+    <link rel="stylesheet" href="./src/css/selectize.default.css" />
+    <link rel="stylesheet" href="./src/css/angularMaterial_1.1.8.min.css" />
+
+
+    <script src="./src/js/angular_1.6.9.js"></script>
+    <script src="./src/js/angularSanitize_1.6.9.min.js"></script>
+    <script src="./src/js/jquerySlim_3.2.1.js"></script>
+    <script src="./src/js/popper.min.js"></script>
+    <script src="./src/js/bootstrap_3.3.7.min.js"></script>
+    <script src="./src/js/angularAnimate_1.6.9.min.js"></script>
+    <script src="./src/js/angularAria_1.6.9.min.js"></script>
+    <script src="./src/js/angularMessages_1.6.9.min.js"></script>
+    <script src="./src/js/angularMaterial_1.1.8.min.js"></script>
+    <script src="./src/js/select.js"></script>
+    <script src="./src/js/scripts.js"></script>
+
+    <link rel="stylesheet" href="./src/css/select.css" />
+</head>
+
+<body>
+    <div ng-app="IMS">
+        <div ng-controller="MainController as ctrl">
+            <!-- Side navigation -->
+            <div class="sidenav">
+                <a href="#" ng-class="{active: ctrl.pageNumber==0 || ctrl.pageNumber==3}" ng-click="ctrl.SetPage(0)">Inventory</a>
+                <a href="#" ng-class="{active: ctrl.pageNumber==1 || ctrl.pageNumber==4}" ng-click="ctrl.SetPage(1)">Transactions</a>
+                <a href="#" ng-class="{active: ctrl.pageNumber==2}" ng-click="ctrl.SetPage(2)">Settings</a>
+            </div>
+
+            <!-- Page content -->
+            <div class="main">
+                <div class="page-header">
+                    <h1 class="pageTitle">{{ctrl.pageTitle}}
+                        <a href="#" ng-click="primaryActionClicked()" ng-show="ctrl.pageNumber==0 || ctrl.pageNumber==1" class="primaryAction"><span class="primaryActionIcon glyphicon glyphicon-plus"></span></a>
+                        <a href="#" ng-click="primaryActionClicked()" ng-show="ctrl.pageNumber==3 || ctrl.pageNumber==4" class="primaryAction"><span class="primaryActionIcon glyphicon-minus"></span></a>
+                    </h1>
+
+                </div>
+                <!--Start of page 0 (Inventory)-->
+                <div class="page" id="PAGE_0" ng-show="ctrl.pageNumber==0">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Product</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Current Quantity</th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="p in ctrl.products">
+                                <td>{{p.product.name}}</td>
+                                <td>{{p.product.category.name}}</td>
+                                <td>{{p.quantity}}</td>
+                                <td>
+                                    <!--start of dropdown menu-->
+                                    <div class="dropdown">
+                                        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="true">
+                                            Action
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                                            <li><a class="dropdown-item" href="#" ng-click="NewTransaction(p)">New Transaction</a></li>
+                                            <li><a class="dropdown-item" href="#" ng-click="ProductDetails(p)">Details</a></li>
+                                            <li role="separator" class="divider"></li>
+                                            <li><a href="#" class="negative" ng-click="RemoveProduct($index)">Delete Product</a></li>
+                                        </ul>
+                                    </div>
+                                    <!--end of dropdown menu-->
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!--END of page 0 (Inventory)-->
+
+                <!--Start of page 1 (Transactions)-->
+                <div class="page" id="PAGE_1" ng-show="ctrl.pageNumber==1">
+                    <table class="table transactions">
+                        <thead>
+                            <tr>
+                                <th scope="col">Product</th>
+                                <th scope="col">Location</th>
+                                <th scope="col">Vendor</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Quantity</th>
+                                <th scope="col">Unit Cost</th>
+                                <th scope="col">Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="t in ctrl.transactions | orderBy: '-date' track by $index">
+                                <td>{{t.productName}}</td>
+                                <td>{{t.location.name}}</td>
+                                <td>{{(t.vendor.name?t.vendor.name:'-')}}</td>
+                                <td>{{t.date | date}}</td>
+                                <td ng-class="{negative:t.quantity < 0, positive:t.quantity>0}">{{t.quantity}}</td>
+                                <td ng-class="{negative:(t.cost > 0)}">${{t.cost}}</td>
+                                <td ng-class="{negative:(t.quantity > 0 && t.cost > 0)}">${{(t.cost*t.quantity)}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!--END of page 1 (Transactions)-->
+
+                <!--Start of page 2 (Settings)-->
+                <div class="page" id="PAGE_2" ng-show="ctrl.pageNumber==2">
+                    <h4>Products</h4>
+                    <ui-select multiple ng-model="ctrl.products" theme="bootstrap" sortable="true" close-on-select="false" style="width: 800px;">
+                        <ui-select-match placeholder="Choose a product to track">{{$item.product.name}}</ui-select-match>
+                        <ui-select-choices repeat="sp in ctrl.sysProducts  | filter: $select.search">
+                            <div ng-bind-html="sp.product.name"></div>
+                            <!--| highlight: $select.search"-->
+                            <small>
+                            &nbsp;&nbsp; Type: {{sp.product.category.name}}
+                        </small>
+                        </ui-select-choices>
+                    </ui-select>
+
+                    </hr>
+                    <h4>Vendors</h4>
+                    <ui-select multiple ng-model="ctrl.vendors" theme="bootstrap" sortable="true" close-on-select="false" style="width: 800px;">
+                        <ui-select-match placeholder="Choose a product to track">{{$item.name}}</ui-select-match>
+                        <ui-select-choices repeat="sp in ctrl.contacts  | filter: $select.search">
+                            <div ng-bind-html="sp.name"></div>
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
+                <!--END of page 2 (Settings)-->
+
+                <!--Start of page 3 (Single Product, not in the nav) needs product id-->
+                <div class="page" id="PAGE_3" ng-show="ctrl.pageNumber==3">
+                    Placeholder for product details/notes and category information
+                    <hr/>
+                    <h4>Product Transactions</h4>
+                    <table class="table transactions">
+                        <thead>
+                            <tr>
+                                <th scope="col">Product</th>
+                                <th scope="col">Location</th>
+                                <th scope="col">Vendor</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Quantity</th>
+                                <th scope="col">Unit Cost</th>
+                                <th scope="col">Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="t in ctrl.singleProduct.transactions | orderBy: '-date' track by $index">
+                                <td>{{t.productName}}</td>
+                                <td>{{t.location.name}}</td>
+                                <td>{{(t.vendor.name?t.vendor.name:'-')}}</td>
+                                <td>{{t.date | date}}</td>
+                                <td ng-class="{negative:t.quantity < 0, positive:t.quantity>0}">{{t.quantity}}</td>
+                                <td ng-class="{negative:(t.cost > 0)}">${{t.cost}}</td>
+                                <td ng-class="{negative:(t.quantity > 0 && t.cost > 0)}">${{(t.cost*t.quantity)}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!--END of page 3 (Single Product)-->
+
+                <!--Start of page 4 (Create transaction page(add/subtract)) needs add/subtract and optional product id-->
+                <div class="page" id="PAGE_4" ng-show="ctrl.pageNumber==4">
+                    <div class="row">
+                        <div class="col-md-4 col-xs-12">
+                            <h5>Product</h5>
+                            <ui-select ng-model="ctrl.tempTransaction.product" theme="bootstrap">
+                                <ui-select-match placeholder="Select a product...">{{$select.selected.product.name}}</ui-select-match>
+                                <ui-select-choices repeat="p in ctrl.products | filter: $select.search">
+                                    <div ng-bind-html="p.product.name | highlight: $select.search"></div>
+                                    <small ng-bind-html="p.product.category.name | highlight: $select.search"></small>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                        <div class="col-md-4 col-xs-12">
+                            <h5>Location</h5>
+                            <ui-select ng-model="ctrl.tempTransaction.location" theme="bootstrap" style="max-width:500px;">
+                                <ui-select-match placeholder="Select the location">{{$select.selected.name}}</ui-select-match>
+                                <ui-select-choices repeat="p in ctrl.locations | filter: $select.search">
+                                    <div ng-bind-html="p.name | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 col-xs-12">
+                            <h5>Date</h5>
+                            <md-datepicker ng-model="ctrl.tempTransaction.date" md-placeholder="Date"></md-datepicker>
+                        </div>
+                        <div class="col-md-4 col-xs-12">
+
+                            <h5>Quantity</h5>
+                            <md-input-container class="md-block" style- "max-width:500px;">
+                                <input required type="number" step="any"  ng-model="ctrl.tempTransaction.quantity" min="-9999" max="9999"/>
+                            </md-input-container>
+                        </div>
+                    </div>
+                    <div class="row" ng-show="ctrl.tempTransaction.quantity>0">
+                        <div class="col-md-4 col-xs-12">
+                            <h5>Unit Cost</h5>
+                            <md-input-container class="md-block" style- "max-width:500px;">
+                                <input required type="number" ng-model="ctrl.tempTransaction.cost" min="1" max="9999"/>
+                            </md-input-container>
+                        </div>
+                        <div class="col-md-4 col-xs-12">
+                            <h5>Vendor</h5>
+                            <ui-select ng-model="ctrl.tempTransaction.vendor" theme="bootstrap" style="max-width:500px;">
+                                <ui-select-match placeholder="Select the location">{{$select.selected.name}}</ui-select-match>
+                                <ui-select-choices repeat="p in ctrl.vendors | filter: $select.search">
+                                    <div ng-bind-html="p.name | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary" ng-click="SaveTransaction()">Submit</button>
+                </div>
+                <!--END of page 4 (Create transaction page)-->
+
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
